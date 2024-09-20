@@ -1,0 +1,87 @@
+project_name: 'HW1-segmentation'
+experiment_name: 'segmentation-baseline'
+experiment: 'segmentation'
+num_classes: 1
+n_epochs: 10
+accelerator: 'gpu'
+device: 0
+monitor_metric: 'val_iou'
+monitor_mode: 'max'
+data_path: '/src/data'
+batch_size: 16
+num_iterations: 100
+train_size: 0.8
+width: &width 224
+height: &height 224
+seed: 42
+
+model_kwargs:
+  model_name: 'efficientnet-b3'
+  pretrained: 'imagenet'
+  classes: 1
+  activation: 'sigmoid'
+
+optimizer: 'torch.optim.AdamW'
+optimizer_kwargs:
+  lr: 1e-4
+  weight_decay: 1e-5
+
+scheduler: 'torch.optim.lr_scheduler.CosineAnnealingLR'
+scheduler_kwargs:
+  T_max: 10
+  eta_min: 1e-5
+
+losses:
+  - name: 'dice'
+    weight: 1.0
+    loss_fn: 'segmentation_models_pytorch.losses.DiceLoss'
+    loss_kwargs: {mode: binary}
+
+  - name: 'iou'
+    weight: 1.0
+    loss_fn: 'segmentation_models_pytorch.losses.JaccardLoss'
+    loss_kwargs: { mode: binary }
+n_workers: 16
+
+augmentations:
+  train:
+    Compose:
+      resize:
+          height: *height
+          width: *width
+          p: 1
+          resize_method: bicubic
+      horisontal_flip:
+          p: 0.1
+      vertical_flip:
+          p: 0.2
+      color_jitter:
+        p: 0.2
+      random_scaling:
+        p: 0.05
+        angle_low: 0
+        angle_max: 45
+        scale_low: 1
+        scale_max: 1.3
+      random_gaussian_blur:
+        p: 0.2
+        kernel_low: 7
+        kernel_max: 15
+      discrete_flip_rotate:
+        p: 0.1
+      elastic_transform:
+        alpha: 120
+        sigma: 6
+        alpha_affine: 10
+        p: 0.2
+      grid_distortion:
+        num_steps: 5
+        distort_limit: 0.3
+        p: 0.2
+  test:
+    Compose:
+      resize:
+        p: 1
+        height: *height
+        width: *width
+        resize_method: bicubic

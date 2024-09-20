@@ -1,0 +1,10 @@
+experiments
+lightning_logs
+.ipynb_checkpoints
+__pycache__
+.venv
+.idea
+planet
+clearml.conf
+models
+data
